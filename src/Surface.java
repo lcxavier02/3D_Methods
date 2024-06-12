@@ -4,12 +4,12 @@ import java.awt.image.BufferedImage;
 public class Surface {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  private double d = 300;
   private int surfaceX = 200;
   private int surfaceY = 200;
   private int surfaceZ = 100; // Posición Z de la superficie
-  private double angleX = 0; // Ángulo de rotación alrededor del eje X
-  private double angleY = 0; // Ángulo de rotación alrededor del eje Y
+  public double angleX = 0; // Ángulo de rotación alrededor del eje X
+  public double angleY = 0; // Ángulo de rotación alrededor del eje Y
+  public double angleZ = 0;
   private double scaleX = 1.0; // Factor de escalado en el eje X
   private double scaleY = 1.0; // Factor de escalado en el eje Y
 
@@ -74,37 +74,59 @@ public class Surface {
   }
 
   private int[] projectVertex(int x, int y, int z) {
-    int x2D = (int) (x * scaleX);
-    int y2D = (int) (y * scaleY);
+    int x2D = (int) (x * scaleX) + 410;
+    int y2D = (int) (y * scaleY) + 410;
     return new int[] { x2D, y2D };
   }
 
+  private double[] rotateX(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0];
+    rotated[1] = vertex[1] * Math.cos(angle) - vertex[2] * Math.sin(angle);
+    rotated[2] = vertex[1] * Math.sin(angle) + vertex[2] * Math.cos(angle);
+    return rotated;
+  }
+
+  private double[] rotateY(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0] * Math.cos(angle) + vertex[2] * Math.sin(angle);
+    rotated[1] = vertex[1];
+    rotated[2] = -vertex[0] * Math.sin(angle) + vertex[2] * Math.cos(angle);
+    return rotated;
+  }
+
+  private double[] rotateZ(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0] * Math.cos(angle) - vertex[1] * Math.sin(angle);
+    rotated[1] = vertex[0] * Math.sin(angle) + vertex[1] * Math.cos(angle);
+    rotated[2] = vertex[2];
+    return rotated;
+  }
+
   private int[] rotateVertex(int x, int y, int z) {
-    double cosY = Math.cos(angleY);
-    double sinY = Math.sin(angleY);
-    double cosX = Math.cos(angleX);
-    double sinX = Math.sin(angleX);
+    x -= surfaceX;
+    y -= surfaceY;
+    z -= surfaceZ;
 
-    // Rotación alrededor del eje Y
-    double newX = x * cosY - z * sinY;
-    double newZ = x * sinY + z * cosY;
+    double[] vertex = new double[] { x, y, z };
+    double[] rotatedX = rotateX(vertex, angleX);
+    double[] rotatedXY = rotateY(rotatedX, angleY);
+    double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
 
-    // Rotación alrededor del eje X
-    double newY = y * cosX - newZ * sinX;
-    newZ = y * sinX + newZ * cosX;
+    int finalX = (int) rotatedXYZ[0] + surfaceX;
+    int finalY = (int) rotatedXYZ[1] + surfaceY;
+    int finalZ = (int) rotatedXYZ[2] + surfaceZ;
 
-    return new int[] { (int) newX, (int) newY, (int) newZ };
+    return new int[] { finalX, finalY, finalZ };
   }
 
   public void drawSurface() {
-    double uStep = 0.3; // Paso para la variable u
-    double vStep = 0.3; // Paso para la variable v
+    double uStep = 0.3;
+    double vStep = 0.3;
 
-    // Radio mayor y menor del toroide
-    double R = 50.0; // Radio mayor
-    double r = 20.0; // Radio menor
+    double R = 50.0;
+    double r = 20.0;
 
-    // Rango para las variables u y v
     double uMin = 0.0;
     double uMax = 2.0 * Math.PI;
     double vMin = 0.0;
@@ -112,12 +134,10 @@ public class Surface {
 
     for (double u = uMin; u < uMax; u += uStep) {
       for (double v = vMin; v < vMax; v += vStep) {
-        // Coordenadas del toroide
         double x = surfaceX + (R + r * Math.cos(v)) * Math.cos(u) * scaleX;
         double y = surfaceY + (R + r * Math.cos(v)) * Math.sin(u) * scaleY;
         double z = surfaceZ + r * Math.sin(v);
 
-        // Coordenadas de los puntos adyacentes
         double x1 = surfaceX + (R + r * Math.cos(v)) * Math.cos(u + uStep) * scaleX;
         double y1 = surfaceY + (R + r * Math.cos(v)) * Math.sin(u + uStep) * scaleY;
         double z1 = surfaceZ + r * Math.sin(v);
@@ -130,19 +150,16 @@ public class Surface {
         double y3 = surfaceY + (R + r * Math.cos(v + vStep)) * Math.sin(u + uStep) * scaleY;
         double z3 = surfaceZ + r * Math.sin(v + vStep);
 
-        // Rotación
         int[] rotatedVertex = rotateVertex((int) x, (int) y, (int) z);
         int[] rotatedVertex1 = rotateVertex((int) x1, (int) y1, (int) z1);
         int[] rotatedVertex2 = rotateVertex((int) x2, (int) y2, (int) z2);
         int[] rotatedVertex3 = rotateVertex((int) x3, (int) y3, (int) z3);
 
-        // Proyección
         int[] projectedVertex = projectVertex(rotatedVertex[0], rotatedVertex[1], rotatedVertex[2]);
         int[] projectedVertex1 = projectVertex(rotatedVertex1[0], rotatedVertex1[1], rotatedVertex1[2]);
         int[] projectedVertex2 = projectVertex(rotatedVertex2[0], rotatedVertex2[1], rotatedVertex2[2]);
         int[] projectedVertex3 = projectVertex(rotatedVertex3[0], rotatedVertex3[1], rotatedVertex3[2]);
 
-        // Dibujar los cuadriláteros formados por los puntos adyacentes
         drawLine(projectedVertex[0], projectedVertex[1], projectedVertex1[0], projectedVertex1[1], Color.RED);
         drawLine(projectedVertex[0], projectedVertex[1], projectedVertex2[0], projectedVertex2[1], Color.RED);
         drawLine(projectedVertex1[0], projectedVertex1[1], projectedVertex3[0], projectedVertex3[1], Color.RED);
@@ -152,13 +169,12 @@ public class Surface {
   }
 
   public void drawCylinder() {
-    int numPointsU = 50; // Número de puntos en dirección U
-    int numPointsV = 50; // Número de puntos en dirección V
-    double a = 10.0; // Factor de escala para el catenoide
-    double b = 10.0; // Factor de escala para el catenoide
-    double height = 10.0; // Altura del catenoide
+    int numPointsU = 50;
+    int numPointsV = 50;
+    double a = 10.0;
+    double b = 10.0;
+    double height = 10.0;
 
-    // Rango para las variables u y v
     double uMin = -Math.PI / 2;
     double uMax = Math.PI / 2;
     double vMin = 0.0;
@@ -169,34 +185,28 @@ public class Surface {
         double u = uMin + (uMax - uMin) * i / (numPointsU - 1);
         double v = vMin + (vMax - vMin) * j / (numPointsV - 1);
 
-        // Coordenadas del catenoide
         double x = surfaceX + a * Math.cosh(u) * Math.cos(v) * scaleX;
         double y = surfaceY + a * Math.cosh(u) * Math.sin(v) * scaleY;
         double z = surfaceZ + b * u * height / (uMax - uMin);
 
-        // Coordenadas del punto adyacente en la dirección u
         double nextU = uMin + (uMax - uMin) * (i + 1) / (numPointsU - 1);
         double nextX = surfaceX + a * Math.cosh(nextU) * Math.cos(v) * scaleX;
         double nextY = surfaceY + a * Math.cosh(nextU) * Math.sin(v) * scaleY;
         double nextZ = surfaceZ + b * nextU * height / (uMax - uMin);
 
-        // Coordenadas del punto adyacente en la dirección v
         double nextV = vMin + (vMax - vMin) * (j + 1) / (numPointsV - 1);
         double nextXV = surfaceX + a * Math.cosh(u) * Math.cos(nextV) * scaleX;
         double nextYV = surfaceY + a * Math.cosh(u) * Math.sin(nextV) * scaleY;
         double nextZV = surfaceZ + b * u * height / (uMax - uMin);
 
-        // Rotación
         int[] rotatedVertex = rotateVertex((int) x, (int) y, (int) z);
         int[] rotatedNextUVertex = rotateVertex((int) nextX, (int) nextY, (int) nextZ);
         int[] rotatedNextVVertex = rotateVertex((int) nextXV, (int) nextYV, (int) nextZV);
 
-        // Proyección
         int[] projectedVertex = projectVertex(rotatedVertex[0], rotatedVertex[1], rotatedVertex[2]);
         int[] projectedNextUVertex = projectVertex(rotatedNextUVertex[0], rotatedNextUVertex[1], rotatedNextUVertex[2]);
         int[] projectedNextVVertex = projectVertex(rotatedNextVVertex[0], rotatedNextVVertex[1], rotatedNextVVertex[2]);
 
-        // Dibujar líneas entre los puntos adyacentes
         drawLine(projectedVertex[0], projectedVertex[1], projectedNextUVertex[0], projectedNextUVertex[1], Color.RED);
         drawLine(projectedVertex[0], projectedVertex[1], projectedNextVVertex[0], projectedNextVVertex[1], Color.RED);
       }
@@ -223,11 +233,6 @@ public class Surface {
 
   public void clearBuffer() {
     fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.WHITE);
-  }
-
-  public void rotate(double deltaX, double deltaY) {
-    angleY += deltaX;
-    angleX += deltaY;
   }
 
   public void move(int dx, int dy, int dz) {

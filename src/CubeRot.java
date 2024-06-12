@@ -4,12 +4,13 @@ import java.awt.image.BufferedImage;
 public class CubeRot {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  private double d = 300;
   public int cubeX = 100;
   public int cubeY = 100;
   public int cubeZ = 100;
-  private double angleX = 0;
-  private double angleY = 0;
+  public double angleX = 0;
+  public double angleY = 0;
+  public double angleZ = 0;
+  int size = 50;
 
   public CubeRot(BufferedImage buffer) {
     this.buffer = buffer;
@@ -71,56 +72,59 @@ public class CubeRot {
 
   }
 
-  private int[] projectVertex(int x, int y, int z) {
-    double u = d / (d + z);
-    int x2D = (int) (x * u);
-    int y2D = (int) (y * u);
-    return new int[] { x2D, y2D };
+  private int[] projectVertex(double[] vertex) {
+    int x = (int) (vertex[0] * 2) + 410;
+    int y = (int) (vertex[1] * 2) + 410;
+    return new int[] { x, y };
   }
 
-  private int[] rotateVertex(int x, int y, int z) {
-    double cosY = Math.cos(angleY);
-    double sinY = Math.sin(angleY);
-    double cosX = Math.cos(angleX);
-    double sinX = Math.sin(angleX);
+  private double[] rotateX(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0];
+    rotated[1] = vertex[1] * Math.cos(angle) - vertex[2] * Math.sin(angle);
+    rotated[2] = vertex[1] * Math.sin(angle) + vertex[2] * Math.cos(angle);
+    return rotated;
+  }
 
-    // Rotación alrededor del eje Y
-    double newX = x * cosY - z * sinY;
-    double newZ = x * sinY + z * cosY;
+  private double[] rotateY(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0] * Math.cos(angle) + vertex[2] * Math.sin(angle);
+    rotated[1] = vertex[1];
+    rotated[2] = -vertex[0] * Math.sin(angle) + vertex[2] * Math.cos(angle);
+    return rotated;
+  }
 
-    // Rotación alrededor del eje X
-    double newY = y * cosX - newZ * sinX;
-    newZ = y * sinX + newZ * cosX;
-
-    return new int[] { (int) newX, (int) newY, (int) newZ };
+  private double[] rotateZ(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0] * Math.cos(angle) - vertex[1] * Math.sin(angle);
+    rotated[1] = vertex[0] * Math.sin(angle) + vertex[1] * Math.cos(angle);
+    rotated[2] = vertex[2];
+    return rotated;
   }
 
   public void drawCube() {
-    int size = 50;
-
-    int[][] vertices = {
-        { cubeX, cubeY, cubeZ },
-        { cubeX + size, cubeY, cubeZ },
-        { cubeX + size, cubeY + size, cubeZ },
-        { cubeX, cubeY + size, cubeZ },
-        { cubeX, cubeY, cubeZ + size },
-        { cubeX + size, cubeY, cubeZ + size },
-        { cubeX + size, cubeY + size, cubeZ + size },
-        { cubeX, cubeY + size, cubeZ + size }
+    double[][] vertices = new double[][] {
+        { -size, -size, -size }, { size, -size, -size }, { size, size, -size }, { -size, size, -size },
+        { -size, -size, size }, { size, -size, size }, { size, size, size }, { -size, size, size }
     };
 
-    int[][] rotatedVertices = new int[8][3];
+    double[][] rotatedVertices = new double[8][3];
     for (int i = 0; i < vertices.length; i++) {
-      rotatedVertices[i] = rotateVertex(vertices[i][0], vertices[i][1], vertices[i][2]);
+      double[] rotatedX = rotateX(vertices[i], angleX);
+      double[] rotatedXY = rotateY(rotatedX, angleY);
+      double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
+      rotatedVertices[i] = rotatedXYZ;
     }
 
-    int[][] projectedVertices = new int[8][2];
+    int[][] projectedVertex = new int[8][2];
     for (int i = 0; i < rotatedVertices.length; i++) {
-      int[] projected = projectVertex(rotatedVertices[i][0], rotatedVertices[i][1], rotatedVertices[i][2]);
-      projectedVertices[i][0] = projected[0] + buffer.getWidth() / 2;
-      projectedVertices[i][1] = projected[1] + buffer.getHeight() / 2;
+      projectedVertex[i] = projectVertex(rotatedVertices[i]);
     }
 
+    drawEdges(projectedVertex);
+  }
+
+  private void drawEdges(int[][] vertex) {
     int[][] edges = {
         { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 },
         { 4, 5 }, { 5, 6 }, { 6, 7 }, { 7, 4 },
@@ -129,11 +133,11 @@ public class CubeRot {
 
     Color color = Color.GREEN;
     for (int[] edge : edges) {
-      int x1_2D = projectedVertices[edge[0]][0];
-      int y1_2D = projectedVertices[edge[0]][1];
-      int x2_2D = projectedVertices[edge[1]][0];
-      int y2_2D = projectedVertices[edge[1]][1];
-      drawLine(x1_2D, y1_2D, x2_2D, y2_2D, color);
+      int x0 = vertex[edge[0]][0];
+      int y0 = vertex[edge[0]][1];
+      int x1 = vertex[edge[1]][0];
+      int y1 = vertex[edge[1]][1];
+      drawLine(x0, y0, x1, y1, color);
     }
   }
 
@@ -153,9 +157,10 @@ public class CubeRot {
     fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.WHITE);
   }
 
-  public void rotateCube(double deltaX, double deltaY) {
+  public void rotateCube(double deltaX, double deltaY, double deltaZ) {
     angleY += deltaX;
     angleX += deltaY;
+    angleZ += deltaY;
   }
 
 }

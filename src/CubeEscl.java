@@ -4,12 +4,13 @@ import java.awt.image.BufferedImage;
 public class CubeEscl {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  private double d = 300;
   private int cubeSize = 50;
   private int centerX = 100;
   private int centerY = 100;
   private int centerZ = 100;
-  private double scaleFactor = 1.0;
+  private double scaleX = 1.0;
+  private double scaleY = 1.0;
+  private double scaleZ = 1.0;
 
   public CubeEscl(BufferedImage buffer) {
     this.buffer = buffer;
@@ -71,25 +72,44 @@ public class CubeEscl {
 
   }
 
-  private int[] projectVertex(int x, int y, int z) {
-    double u = d / (d + z);
-    int x2D = (int) (x * u);
-    int y2D = (int) (y * u);
+  private int[] projectVertex(double x, double y, double z) {
+    int x2D = (int) (x * scaleX);
+    int y2D = (int) (y * scaleY);
     return new int[] { x2D, y2D };
   }
 
   public void drawCube() {
-    int halfSize = (int) (cubeSize * scaleFactor / 2);
-    int[][] vertices = {
-        { centerX - halfSize, centerY - halfSize, centerZ - halfSize },
-        { centerX + halfSize, centerY - halfSize, centerZ - halfSize },
-        { centerX + halfSize, centerY + halfSize, centerZ - halfSize },
-        { centerX - halfSize, centerY + halfSize, centerZ - halfSize },
-        { centerX - halfSize, centerY - halfSize, centerZ + halfSize },
-        { centerX + halfSize, centerY - halfSize, centerZ + halfSize },
-        { centerX + halfSize, centerY + halfSize, centerZ + halfSize },
-        { centerX - halfSize, centerY + halfSize, centerZ + halfSize }
+    int halfSizeX = (int) (cubeSize * scaleX / 2);
+    int halfSizeY = (int) (cubeSize * scaleY / 2);
+    int halfSizeZ = (int) (cubeSize * scaleZ / 2);
+
+    // Define los vértices del cubo
+    double[][] vertices = {
+        { centerX - halfSizeX, centerY - halfSizeY, centerZ - halfSizeZ },
+        { centerX + halfSizeX, centerY - halfSizeY, centerZ - halfSizeZ },
+        { centerX + halfSizeX, centerY + halfSizeY, centerZ - halfSizeZ },
+        { centerX - halfSizeX, centerY + halfSizeY, centerZ - halfSizeZ },
+        { centerX - halfSizeX, centerY - halfSizeY, centerZ + halfSizeZ },
+        { centerX + halfSizeX, centerY - halfSizeY, centerZ + halfSizeZ },
+        { centerX + halfSizeX, centerY + halfSizeY, centerZ + halfSizeZ },
+        { centerX - halfSizeX, centerY + halfSizeY, centerZ + halfSizeZ }
     };
+
+    double[][] rotationMatrixZ = {
+        { Math.cos(Math.PI / 4), -Math.sin(Math.PI / 4), 0 },
+        { Math.sin(Math.PI / 4), Math.cos(Math.PI / 4), 0 },
+        { 0, 0, 1 }
+    };
+
+    double[][] rotationMatrixX = {
+        { 1, 0, 0 },
+        { 0, Math.cos(Math.PI / 4), -Math.sin(Math.PI / 4) },
+        { 0, Math.sin(Math.PI / 4), Math.cos(Math.PI / 4) }
+    };
+
+    for (int i = 0; i < vertices.length; i++) {
+      vertices[i] = multiplyMatrixVector(rotationMatrixX, multiplyMatrixVector(rotationMatrixZ, vertices[i]));
+    }
 
     int[][] projectedVertices = new int[8][2];
     for (int i = 0; i < vertices.length; i++) {
@@ -104,7 +124,7 @@ public class CubeEscl {
         { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 }
     };
 
-    Color color = Color.RED;
+    Color color = Color.BLUE;
     for (int[] edge : edges) {
       int x1_2D = projectedVertices[edge[0]][0];
       int y1_2D = projectedVertices[edge[0]][1];
@@ -112,6 +132,14 @@ public class CubeEscl {
       int y2_2D = projectedVertices[edge[1]][1];
       drawLine(x1_2D, y1_2D, x2_2D, y2_2D, color);
     }
+  }
+
+  private double[] multiplyMatrixVector(double[][] matrix, double[] vector) {
+    double[] result = new double[3];
+    for (int i = 0; i < 3; i++) {
+      result[i] = matrix[i][0] * vector[0] + matrix[i][1] * vector[1] + matrix[i][2] * vector[2];
+    }
+    return result;
   }
 
   public void fillRect(int x, int y, int width, int height, Color color) {
@@ -130,11 +158,10 @@ public class CubeEscl {
     fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.WHITE);
   }
 
-  public void scaleCube(double scale) {
-    scaleFactor *= scale;
-    if (scaleFactor < 0.1) {
-      scaleFactor = 0.1;
-    }
+  public void scale(double scale) {
+    scaleX *= scale;
+    scaleY *= scale;
+    scaleZ *= scale;
   }
 
 }

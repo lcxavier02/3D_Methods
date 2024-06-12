@@ -23,10 +23,6 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
   private CubeAutoRot cubeAutoRot;
   private ExplicitCurve curve;
   private Surface surface;
-  private int mouseY;
-  private int lastMouseX;
-  private int lastMouseY;
-  private Point lastMousePosition;
   private Timer timer;
 
   Graphics graphicsBuffer;
@@ -63,11 +59,10 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
     curve = new ExplicitCurve(buffer);
   }
 
-  // private void startAutoRotation() {
-  // timer = new Timer();
-  // timer.scheduleAtFixedRate(new RotateTask(), 0, 65); // Repintar cada 10
-  // milisegundos
-  // }
+  private void startAutoRotation() {
+    timer = new Timer();
+    timer.scheduleAtFixedRate(new RotateTask(), 0, 65);
+  }
 
   public void createCubeAutoRot() {
     cubeAutoRot = new CubeAutoRot(buffer);
@@ -99,15 +94,15 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
     graphicsBuffer = image.getGraphics();
 
     // cube.showCube();
-    // cuberPersp.showCube();
+    // cubePersp.showCube();
     // cubeTrasl.clearBuffer();
     // cubeTrasl.showCube();
     // cubeEscl.clearBuffer();
     // cubeEscl.showCube();
     // cubeRot.clearBuffer();
     // cubeRot.showCube();
-    curve.clearBuffer();
-    curve.showCurve();
+    // curve.clearBuffer();
+    // curve.showCurve();
     // surface.clearBuffer();
     // surface.showSurface();
     // surface.showCylinder();
@@ -123,21 +118,59 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
   @Override
   public void keyPressed(KeyEvent e) {
     // Traslacion
-    // int step = 5;
-
-    // if (e.getKeyCode() == KeyEvent.VK_W) {
-    // cubeTrasl.move(0, -step, 0);
-    // } else if (e.getKeyCode() == KeyEvent.VK_S) {
-    // cubeTrasl.move(0, step, 0);
-    // } else if (e.getKeyCode() == KeyEvent.VK_A) {
-    // cubeTrasl.move(-step, 0, 0);
-    // } else if (e.getKeyCode() == KeyEvent.VK_D) {
-    // cubeTrasl.move(step, 0, 0);
-    // }
-
-    // repaint();
-
     int step = 5;
+
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_LEFT:
+        cubeRot.angleY -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_RIGHT:
+        cubeRot.angleY += Math.toRadians(10);
+        break;
+      case KeyEvent.VK_UP:
+        cubeRot.angleX -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_DOWN:
+        cubeRot.angleX += Math.toRadians(10);
+        break;
+      case KeyEvent.VK_A:
+        cubeRot.angleZ -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_D:
+        cubeRot.angleZ += Math.toRadians(10);
+        break;
+    }
+
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_0:
+        cubeEscl.scale(1.1);
+        break;
+      case KeyEvent.VK_1:
+        cubeEscl.scale(0.9);
+        break;
+    }
+
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_W:
+        cubeTrasl.move(0, -step, 0);
+        break;
+      case KeyEvent.VK_S:
+        cubeTrasl.move(0, step, 0);
+        break;
+      case KeyEvent.VK_A:
+        cubeTrasl.move(-step, 0, 0);
+        break;
+      case KeyEvent.VK_D:
+        cubeTrasl.move(step, 0, 0);
+        break;
+      case KeyEvent.VK_Q:
+        cubeTrasl.move(0, 0, -step);
+        break;
+      case KeyEvent.VK_E:
+        cubeTrasl.move(0, 0, step);
+        break;
+    }
+
     switch (e.getKeyCode()) {
       case KeyEvent.VK_W:
         curve.move(0, -step, 0);
@@ -163,37 +196,71 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
       case KeyEvent.VK_1:
         curve.scale(0.9);
         break;
+      case KeyEvent.VK_LEFT:
+        curve.angleY -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_RIGHT:
+        curve.angleY += Math.toRadians(10);
+        break;
+      case KeyEvent.VK_UP:
+        curve.angleX -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_DOWN:
+        curve.angleX += Math.toRadians(10);
+        break;
+      case KeyEvent.VK_O:
+        curve.angleZ -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_P:
+        curve.angleZ += Math.toRadians(10);
+        break;
+    }
+
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_W:
+        surface.move(0, -step, 0);
+        break;
+      case KeyEvent.VK_S:
+        surface.move(0, step, 0);
+        break;
+      case KeyEvent.VK_A:
+        surface.move(-step, 0, 0);
+        break;
+      case KeyEvent.VK_D:
+        surface.move(step, 0, 0);
+        break;
+      case KeyEvent.VK_Q:
+        surface.move(0, 0, step);
+        break;
+      case KeyEvent.VK_E:
+        surface.move(0, 0, -step);
+        break;
+      case KeyEvent.VK_0:
+        surface.scale(1.1);
+        break;
+      case KeyEvent.VK_1:
+        surface.scale(0.9);
+        break;
+      case KeyEvent.VK_LEFT:
+        surface.angleY -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_RIGHT:
+        surface.angleY += Math.toRadians(10);
+        break;
+      case KeyEvent.VK_UP:
+        surface.angleX -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_DOWN:
+        surface.angleX += Math.toRadians(10);
+        break;
+      case KeyEvent.VK_O:
+        surface.angleZ -= Math.toRadians(10);
+        break;
+      case KeyEvent.VK_P:
+        surface.angleZ += Math.toRadians(10);
+        break;
     }
     repaint();
-
-    // int step = 5;
-    // switch (e.getKeyCode()) {
-    // case KeyEvent.VK_W:
-    // surface.move(0, -step, 0);
-    // break;
-    // case KeyEvent.VK_S:
-    // surface.move(0, step, 0);
-    // break;
-    // case KeyEvent.VK_A:
-    // surface.move(-step, 0, 0);
-    // break;
-    // case KeyEvent.VK_D:
-    // surface.move(step, 0, 0);
-    // break;
-    // case KeyEvent.VK_Q:
-    // surface.move(0, 0, step);
-    // break;
-    // case KeyEvent.VK_E:
-    // surface.move(0, 0, -step);
-    // break;
-    // case KeyEvent.VK_0:
-    // surface.scale(1.1);
-    // break;
-    // case KeyEvent.VK_1:
-    // surface.scale(0.9);
-    // break;
-    // }
-    // repaint();
   }
 
   @Override
@@ -202,74 +269,19 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
 
   @Override
   public void mouseDragged(MouseEvent e) {
-    // Rotacion
-    // Point currentMousePosition = e.getPoint();
-    // if (lastMousePosition != null) {
-    // double deltaX = currentMousePosition.getX() - lastMousePosition.getX();
-    // double deltaY = currentMousePosition.getY() - lastMousePosition.getY();
-    // cubeRot.rotateCube(deltaX * 0.01, deltaY * 0.01);
-    // }
-    // lastMousePosition = currentMousePosition;
-    // repaint();
-
-    Point currentMousePosition = e.getPoint();
-    if (lastMousePosition != null) {
-      double deltaX = currentMousePosition.getX() - lastMousePosition.getX();
-      double deltaY = currentMousePosition.getY() - lastMousePosition.getY();
-      curve.rotate(deltaX * 0.01, deltaY * 0.01);
-    }
-    lastMousePosition = currentMousePosition;
     repaint();
-
-    // Point currentMousePosition = e.getPoint();
-    // if (lastMousePosition != null) {
-    // double deltaX = currentMousePosition.getX() - lastMousePosition.getX();
-    // double deltaY = currentMousePosition.getY() - lastMousePosition.getY();
-    // surface.rotate(deltaX * 0.01, deltaY * 0.01);
-    // }
-    // lastMousePosition = currentMousePosition;
-    // repaint();
   }
 
   @Override
   public void mouseMoved(MouseEvent e) {
-    // Traslacion
-    // int mouseY = e.getY();
-    // int deltaY = mouseY - this.mouseY;
-
-    // int step = 5;
-    // int dz = (deltaY > 0) ? step : -step;
-    // cubeTrasl.move(0, 0, dz);
-
-    // this.mouseY = mouseY;
-    // repaint();
-
-    lastMousePosition = e.getPoint();
   }
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    // if (e.getButton() == MouseEvent.BUTTON1) {
-    // cubeEscl.scaleCube(1.1); // Escalar hacia arriba con clic izquierdo
-    // } else if (e.getButton() == MouseEvent.BUTTON3) {
-    // cubeEscl.scaleCube(0.9); // Escalar hacia abajo con clic derecho
-    // }
-    // repaint();
-
-    // if (e.getButton() == MouseEvent.BUTTON1) {
-    // curve.scale(1.1); // Escalar hacia arriba con clic izquierdo
-    // } else if (e.getButton() == MouseEvent.BUTTON3) {
-    // curve.scale(0.9); // Escalar hacia abajo con clic derecho
-    // }
-
-    // repaint();
   }
 
   @Override
   public void mousePressed(MouseEvent e) {
-    // Escalamiento
-    // lastMouseX = e.getX();
-    // lastMouseY = e.getY();
   }
 
   @Override
@@ -284,14 +296,14 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
   public void mouseExited(MouseEvent e) {
   }
 
-  // private class RotateTask extends TimerTask {
-  // @Override
-  // public void run() {
-  // cubeAutoRot.clearBuffer();
-  // cubeAutoRot.rotate(); // Realiza la rotación automática del cubo
-  // cubeAutoRot.showCube(); // Muestra el cubo rotado
-  // repaint(); // Vuelve a dibujar la escena
-  // }
-  // }
+  private class RotateTask extends TimerTask {
+    @Override
+    public void run() {
+      cubeAutoRot.clearBuffer();
+      cubeAutoRot.rotate();
+      cubeAutoRot.showCube();
+      repaint();
+    }
+  }
 
 }

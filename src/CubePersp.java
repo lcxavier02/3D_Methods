@@ -87,8 +87,8 @@ public class CubePersp {
     int[][] projectedVertices = new int[8][2];
     for (int i = 0; i < vertices.length; i++) {
       int[] projected = projectVertex(vertices[i][0], vertices[i][1], vertices[i][2]);
-      projectedVertices[i][0] = projected[0] + buffer.getWidth() / 2; // Centrar el cubo
-      projectedVertices[i][1] = projected[1] + buffer.getHeight() / 2; // Centrar el cubo
+      projectedVertices[i][0] = projected[0] + buffer.getWidth() / 2;
+      projectedVertices[i][1] = projected[1] + buffer.getHeight() / 2;
     }
 
     int[][] edges = {
@@ -109,7 +109,7 @@ public class CubePersp {
 
   public void showCube() {
     if (buffer != null) {
-      drawCube(150, 150, 150, 150); // Dibuja un cubo con un tamaño dado
+      drawCube(150, 150, 150, 150);
     }
   }
 

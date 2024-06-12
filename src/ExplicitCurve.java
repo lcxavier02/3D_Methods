@@ -4,14 +4,14 @@ import java.awt.image.BufferedImage;
 public class ExplicitCurve {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  private double d = 300;
   private int surfaceX = 100;
   private int surfaceY = 100;
-  private int surfaceZ = 0; // Posición Z de la superficie
-  private double angleX = 0; // Ángulo de rotación alrededor del eje X
-  private double angleY = 0; // Ángulo de rotación alrededor del eje Y
-  private double scaleX = 1.0; // Factor de escalado en el eje X
-  private double scaleY = 1.0; // Factor de escalado en el eje Y
+  private int surfaceZ = 0;
+  public double angleX = 0;
+  public double angleY = 0;
+  public double angleZ = 0;
+  private double scaleX = 1.0;
+  private double scaleY = 1.0;
 
   public ExplicitCurve(BufferedImage buffer) {
     this.buffer = buffer;
@@ -72,62 +72,81 @@ public class ExplicitCurve {
     }
   }
 
-  private int[] projectVertex(int x, int y, int z) {
-    int x2D = (int) (x * scaleX);
-    int y2D = (int) (y * scaleY);
+  private int[] projectVertex(double x, double y, double z) {
+    int x2D = (int) (x * scaleX) + 410;
+    int y2D = (int) (y * scaleY) + 410;
     return new int[] { x2D, y2D };
   }
 
-  private int[] rotateVertex(int x, int y, int z) {
-    double cosY = Math.cos(angleY);
-    double sinY = Math.sin(angleY);
-    double cosX = Math.cos(angleX);
-    double sinX = Math.sin(angleX);
+  private double[] rotateX(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0];
+    rotated[1] = vertex[1] * Math.cos(angle) - vertex[2] * Math.sin(angle);
+    rotated[2] = vertex[1] * Math.sin(angle) + vertex[2] * Math.cos(angle);
+    return rotated;
+  }
 
-    // Rotación alrededor del eje Y
-    double newX = x * cosY - z * sinY;
-    double newZ = x * sinY + z * cosY;
+  private double[] rotateY(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0] * Math.cos(angle) + vertex[2] * Math.sin(angle);
+    rotated[1] = vertex[1];
+    rotated[2] = -vertex[0] * Math.sin(angle) + vertex[2] * Math.cos(angle);
+    return rotated;
+  }
 
-    // Rotación alrededor del eje X
-    double newY = y * cosX - newZ * sinX;
-    newZ = y * sinX + newZ * cosX;
+  private double[] rotateZ(double[] vertex, double angle) {
+    double[] rotated = new double[3];
+    rotated[0] = vertex[0] * Math.cos(angle) - vertex[1] * Math.sin(angle);
+    rotated[1] = vertex[0] * Math.sin(angle) + vertex[1] * Math.cos(angle);
+    rotated[2] = vertex[2];
+    return rotated;
+  }
 
-    return new int[] { (int) newX, (int) newY, (int) newZ };
+  private double[] rotateVertex(double x, double y, double z) {
+    double[] vertex = new double[] { x, y, z };
+    double[] rotatedX = rotateX(vertex, angleX);
+    double[] rotatedXY = rotateY(rotatedX, angleY);
+    double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
+    return rotatedXYZ;
   }
 
   public void drawSpiral() {
-    int numPoints = 200; // Número de puntos en la espiral
-    double height = 200; // Altura total de la espiral
-    double radius = 50; // Radio de la espiral
-    double coilSpacing = 10; // Espaciado entre las espiras
+    int numPoints = 200;
+    double height = 200;
+    double radius = 50;
+    double coilSpacing = 10;
 
-    // Rango para las variables t y theta
     double tMin = 0.0;
     double tMax = 8.0 * Math.PI;
 
     for (int i = 0; i < numPoints; i++) {
       double t = tMin + (tMax - tMin) * i / numPoints;
 
-      // Calcular coordenadas para la espiral
-      double x = surfaceX + (radius + coilSpacing * t / (2 * Math.PI)) * Math.cos(t) * scaleX;
-      double y = surfaceY + (radius + coilSpacing * t / (2 * Math.PI)) * Math.sin(t) * scaleY;
-      double z = surfaceZ + height * t / (2 * Math.PI);
+      double x = (radius + coilSpacing * t / (2 * Math.PI)) * Math.cos(t);
+      double y = (radius + coilSpacing * t / (2 * Math.PI)) * Math.sin(t);
+      double z = height * t / (2 * Math.PI);
 
-      // Calcular coordenadas para el siguiente punto
       double nextT = tMin + (tMax - tMin) * (i + 1) / numPoints;
-      double nextX = surfaceX + (radius + coilSpacing * nextT / (2 * Math.PI)) * Math.cos(nextT) * scaleX;
-      double nextY = surfaceY + (radius + coilSpacing * nextT / (2 * Math.PI)) * Math.sin(nextT) * scaleY;
-      double nextZ = surfaceZ + height * nextT / (2 * Math.PI);
+      double nextX = (radius + coilSpacing * nextT / (2 * Math.PI)) * Math.cos(nextT);
+      double nextY = (radius + coilSpacing * nextT / (2 * Math.PI)) * Math.sin(nextT);
+      double nextZ = height * nextT / (2 * Math.PI);
 
-      // Rotación
-      int[] rotatedVertex = rotateVertex((int) x, (int) y, (int) z);
-      int[] rotatedNextVertex = rotateVertex((int) nextX, (int) nextY, (int) nextZ);
+      // Rotate around the center of the spiral
+      double[] rotatedVertex = rotateVertex(x, y, z);
+      double[] rotatedNextVertex = rotateVertex(nextX, nextY, nextZ);
 
-      // Proyección
-      int[] projectedVertex = projectVertex(rotatedVertex[0], rotatedVertex[1], rotatedVertex[2]);
-      int[] projectedNextVertex = projectVertex(rotatedNextVertex[0], rotatedNextVertex[1], rotatedNextVertex[2]);
+      // Translate to the surface position
+      double translatedX = rotatedVertex[0] + surfaceX;
+      double translatedY = rotatedVertex[1] + surfaceY;
+      double translatedZ = rotatedVertex[2] + surfaceZ;
 
-      // Dibujar línea entre el punto actual y el siguiente
+      double nextTranslatedX = rotatedNextVertex[0] + surfaceX;
+      double nextTranslatedY = rotatedNextVertex[1] + surfaceY;
+      double nextTranslatedZ = rotatedNextVertex[2] + surfaceZ;
+
+      int[] projectedVertex = projectVertex(translatedX, translatedY, translatedZ);
+      int[] projectedNextVertex = projectVertex(nextTranslatedX, nextTranslatedY, nextTranslatedZ);
+
       drawLine(projectedVertex[0], projectedVertex[1], projectedNextVertex[0], projectedNextVertex[1], Color.RED);
     }
   }
@@ -148,9 +167,10 @@ public class ExplicitCurve {
     }
   }
 
-  public void rotate(double deltaX, double deltaY) {
+  public void rotate(double deltaX, double deltaY, double deltaZ) {
     angleY += deltaX;
     angleX += deltaY;
+    angleZ += deltaZ;
   }
 
   public void move(int dx, int dy, int dz) {
