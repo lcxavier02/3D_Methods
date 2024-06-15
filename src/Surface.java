@@ -4,11 +4,11 @@ import java.awt.image.BufferedImage;
 public class Surface {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  private int surfaceX = 200;
-  private int surfaceY = 200;
-  private int surfaceZ = 100; // Posición Z de la superficie
-  public double angleX = 0; // Ángulo de rotación alrededor del eje X
-  public double angleY = 0; // Ángulo de rotación alrededor del eje Y
+  private int surfaceX = 0;
+  private int surfaceY = 0;
+  private int surfaceZ = 0;
+  public double angleX = 0;
+  public double angleY = 0;
   public double angleZ = 0;
   private double scaleX = 1.0; // Factor de escalado en el eje X
   private double scaleY = 1.0; // Factor de escalado en el eje Y
@@ -180,7 +180,7 @@ public class Surface {
     double vMin = 0.0;
     double vMax = 2.0 * Math.PI;
 
-    for (int i = 0; i < numPointsU; i++) {
+    for (int i = 0; i < numPointsU - 1; i++) {
       for (int j = 0; j < numPointsV; j++) {
         double u = uMin + (uMax - uMin) * i / (numPointsU - 1);
         double v = vMin + (vMax - vMin) * j / (numPointsV - 1);

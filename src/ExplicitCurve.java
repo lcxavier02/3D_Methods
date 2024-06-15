@@ -4,9 +4,9 @@ import java.awt.image.BufferedImage;
 public class ExplicitCurve {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  private int surfaceX = 100;
-  private int surfaceY = 100;
-  private int surfaceZ = 0;
+  private int surfaceX = 0;
+  private int surfaceY = 0;
+  private int surfaceZ = 100;
   public double angleX = 0;
   public double angleY = 0;
   public double angleZ = 0;

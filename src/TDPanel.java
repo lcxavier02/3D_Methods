@@ -48,7 +48,7 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
     addMouseListener(this);
     addMouseMotionListener(this);
 
-    // startAutoRotation();
+    startAutoRotation();
   }
 
   public void createSurface() {
@@ -152,10 +152,10 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
 
     switch (e.getKeyCode()) {
       case KeyEvent.VK_W:
-        cubeTrasl.move(0, -step, 0);
+        cubeTrasl.move(0, 0, step);
         break;
       case KeyEvent.VK_S:
-        cubeTrasl.move(0, step, 0);
+        cubeTrasl.move(0, 0, -step);
         break;
       case KeyEvent.VK_A:
         cubeTrasl.move(-step, 0, 0);
@@ -164,10 +164,10 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
         cubeTrasl.move(step, 0, 0);
         break;
       case KeyEvent.VK_Q:
-        cubeTrasl.move(0, 0, -step);
+        cubeTrasl.move(0, -step, 0);
         break;
       case KeyEvent.VK_E:
-        cubeTrasl.move(0, 0, step);
+        cubeTrasl.move(0, step, 0);
         break;
     }
 
