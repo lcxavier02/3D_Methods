@@ -133,6 +133,7 @@ public class CubeAutoRot {
     Arrays.fill(zBuffer, Double.NEGATIVE_INFINITY);
 
     drawFaces(rotatedVertices, projectedVertex, zBuffer);
+    drawEdges(projectedVertex);
   }
 
   private void drawFaces(double[][] rotatedVertices, int[][] projectedVertices, double[] zBuffer) {
