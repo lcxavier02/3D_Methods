@@ -7,14 +7,21 @@ import java.util.Collections;
 public class CubeAutoRot {
   private BufferedImage buffer;
   private Graphics graphicsBuffer;
-  public int cubeX = 100;
-  public int cubeY = 100;
-  public int cubeZ = 100;
+  public int cubeX = 0;
+  public int cubeY = 0;
+  public int cubeZ = 0;
   public double angleX = 0;
   public double angleY = 0;
   public double angleZ = 0;
+  private double scaleX = 1.0;
+  private double scaleY = 1.0;
   int size = 50;
-  private Vector3D lightDirection = new Vector3D(1, 1, 1).normalize(); // Dirección de la fuente de luz
+  private Vector3D lightDirection = new Vector3D(1, 1, 1).normalize();
+  private boolean drawEdges = true;
+
+  public void toggleEdges() {
+    drawEdges = !drawEdges;
+  }
 
   public void setLightDirection(Vector3D lightDirection) {
     this.lightDirection = lightDirection.normalize();
@@ -81,8 +88,8 @@ public class CubeAutoRot {
   }
 
   private int[] projectVertex(double[] vertex) {
-    int x = (int) (vertex[0] * 2) + 410;
-    int y = (int) (vertex[1] * 2) + 410;
+    int x = (int) (vertex[0] * scaleX) + 410;
+    int y = (int) (vertex[1] * scaleY) + 410;
     return new int[] { x, y };
   }
 
@@ -124,16 +131,23 @@ public class CubeAutoRot {
       rotatedVertices[i] = rotatedXYZ;
     }
 
+    double[][] traslatedVertices = new double[8][3];
+    for (int i = 0; i < rotatedVertices.length; i++) {
+      double x = rotatedVertices[i][0] + cubeX;
+      double y = rotatedVertices[i][1] + cubeY;
+      double z = rotatedVertices[i][2] + cubeZ;
+      traslatedVertices[i] = new double[] { x, y, z };
+    }
+
     int[][] projectedVertex = new int[8][2];
     for (int i = 0; i < rotatedVertices.length; i++) {
-      projectedVertex[i] = projectVertex(rotatedVertices[i]);
+      projectedVertex[i] = projectVertex(traslatedVertices[i]);
     }
-    // Limpiar el Z-Buffer antes de dibujar
+
     double[] zBuffer = new double[buffer.getWidth() * buffer.getHeight()];
     Arrays.fill(zBuffer, Double.NEGATIVE_INFINITY);
 
     drawFaces(rotatedVertices, projectedVertex, zBuffer);
-    drawEdges(projectedVertex);
   }
 
   private void drawFaces(double[][] rotatedVertices, int[][] projectedVertices, double[] zBuffer) {
@@ -144,19 +158,15 @@ public class CubeAutoRot {
     };
 
     Color[] faceColors = {
-        Color.BLUE, Color.GREEN, Color.RED, // Front, Back, Left
-        Color.YELLOW, Color.CYAN, Color.MAGENTA // Right, Top, Bottom
+        Color.GREEN, Color.BLUE, Color.ORANGE, // Front, Back, Left
+        Color.RED, Color.WHITE, Color.YELLOW // Right, Top, Bottom
     };
 
-    // Lista para almacenar las caras ordenadas por su coordenada Z mínima
     ArrayList<Integer> sortedFaces = new ArrayList<>();
 
-    // Calcular y ordenar las caras por su profundidad (coordenada Z mínima)
     for (int i = 0; i < faces.length; i++) {
       int[] face = faces[i];
       double[] zPoints = new double[4];
-
-      // Calcular la coordenada Z mínima de la cara
       double minZ = Double.MAX_VALUE;
       for (int j = 0; j < face.length; j++) {
         zPoints[j] = rotatedVertices[face[j]][2];
@@ -164,12 +174,9 @@ public class CubeAutoRot {
           minZ = zPoints[j];
         }
       }
-
-      // Agregar la cara al listado ordenado por su coordenada Z mínima
       sortedFaces.add(i);
     }
 
-    // Ordenar las caras de acuerdo a su coordenada Z mínima (profundidad)
     sortedFaces.sort((i1, i2) -> {
       double minZ1 = Math.min(Math.min(rotatedVertices[faces[i1][0]][2], rotatedVertices[faces[i1][1]][2]),
           Math.min(rotatedVertices[faces[i1][2]][2], rotatedVertices[faces[i1][3]][2]));
@@ -178,13 +185,9 @@ public class CubeAutoRot {
       return Double.compare(minZ1, minZ2);
     });
 
-    // Dibujar las caras en el orden de su profundidad (de más cercanas a más
-    // lejanas)
     for (int index : sortedFaces) {
       int[] face = faces[index];
       Color color = faceColors[index];
-
-      // Determinar el orden de los vértices para dibujar el polígono
       int[] xPoints = new int[4];
       int[] yPoints = new int[4];
       for (int j = 0; j < face.length; j++) {
@@ -192,11 +195,9 @@ public class CubeAutoRot {
         yPoints[j] = projectedVertices[face[j]][1];
       }
 
-      // Calcular el mínimo de la coordenada Z para el ordenamiento
       double minZ = Math.min(Math.min(rotatedVertices[face[0]][2], rotatedVertices[face[1]][2]),
           Math.min(rotatedVertices[face[2]][2], rotatedVertices[face[3]][2]));
 
-      // Verificar el Z-buffer y dibujar la cara si es visible
       boolean drawFace = true;
       for (int py = Math.min(yPoints[0], Math.min(yPoints[1], Math.min(yPoints[2], yPoints[3]))); py <= Math
           .max(yPoints[0], Math.max(yPoints[1], Math.max(yPoints[2], yPoints[3]))); py++) {
@@ -214,11 +215,9 @@ public class CubeAutoRot {
         }
       }
 
-      // Dibujar la cara si es visible y actualizar el Z-buffer
       if (drawFace) {
         fillPolygon(xPoints, yPoints, color);
 
-        // Actualizar el Z-buffer para los píxeles dibujados
         for (int py = Math.min(yPoints[0], Math.min(yPoints[1], Math.min(yPoints[2], yPoints[3]))); py <= Math
             .max(yPoints[0], Math.max(yPoints[1], Math.max(yPoints[2], yPoints[3]))); py++) {
           for (int px = Math.min(xPoints[0], Math.min(xPoints[1], Math.min(xPoints[2], xPoints[3]))); px <= Math
@@ -230,9 +229,13 @@ public class CubeAutoRot {
         }
       }
     }
+
+    if (drawEdges) {
+      drawEdges(projectedVertices, rotatedVertices, zBuffer);
+    }
   }
 
-  private void drawEdges(int[][] vertex) {
+  private void drawEdges(int[][] projectedVertices, double[][] rotatedVertices, double[] zBuffer) {
     int[][] edges = {
         { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 },
         { 4, 5 }, { 5, 6 }, { 6, 7 }, { 7, 4 },
@@ -240,12 +243,65 @@ public class CubeAutoRot {
     };
 
     Color color = Color.BLACK;
+
     for (int[] edge : edges) {
-      int x0 = vertex[edge[0]][0];
-      int y0 = vertex[edge[0]][1];
-      int x1 = vertex[edge[1]][0];
-      int y1 = vertex[edge[1]][1];
-      drawLine(x0, y0, x1, y1, color);
+      int x0 = projectedVertices[edge[0]][0];
+      int y0 = projectedVertices[edge[0]][1];
+      double z0 = rotatedVertices[edge[0]][2];
+      int x1 = projectedVertices[edge[1]][0];
+      int y1 = projectedVertices[edge[1]][1];
+      double z1 = rotatedVertices[edge[1]][2];
+
+      boolean visible = true;
+      int dx = Math.abs(x1 - x0);
+      int dy = Math.abs(y1 - y0);
+
+      int xi = (x1 > x0) ? 1 : -1;
+      int yi = (y1 > y0) ? 1 : -1;
+
+      int x = x0;
+      int y = y0;
+      int pk;
+
+      if (dx > dy) {
+        pk = 2 * dy - dx;
+        while (x != x1) {
+          if (pk > 0) {
+            x = x + xi;
+            y = y + yi;
+            pk = pk + 2 * (dy - dx);
+          } else {
+            x = x + xi;
+            pk = pk + 2 * dy;
+          }
+          double z = z0 + (z1 - z0) * Math.abs(x - x0) / dx;
+          if (z <= zBuffer[y * buffer.getWidth() + x]) {
+            visible = false;
+            break;
+          }
+        }
+      } else {
+        pk = 2 * dx - dy;
+        while (y != y1) {
+          if (pk > 0) {
+            x = x + xi;
+            y = y + yi;
+            pk = pk + 2 * (dx - dy);
+          } else {
+            y = y + yi;
+            pk = pk + 2 * dx;
+          }
+          double z = z0 + (z1 - z0) * Math.abs(y - y0) / dy;
+          if (z <= zBuffer[y * buffer.getWidth() + x]) {
+            visible = false;
+            break;
+          }
+        }
+      }
+
+      if (visible) {
+        drawLine(x0, y0, x1, y1, color);
+      }
     }
   }
 
@@ -256,11 +312,6 @@ public class CubeAutoRot {
   }
 
   public void fillPolygon(int[] xPoints, int[] yPoints, Color color) {
-    if (xPoints.length != yPoints.length || xPoints.length < 3) {
-      throw new IllegalArgumentException("Arrays xPoints and yPoints must have the same length and at least 3 points");
-    }
-
-    // Encontrar el bounding box del polígono (rectángulo que contiene al polígono)
     int minX = Integer.MAX_VALUE;
     int maxX = Integer.MIN_VALUE;
     int minY = Integer.MAX_VALUE;
@@ -277,14 +328,11 @@ public class CubeAutoRot {
         maxY = yPoints[i];
     }
 
-    // Rellenar el polígono usando el algoritmo de scanline
     for (int y = minY; y <= maxY; y++) {
-      // Lista para almacenar los puntos de intersección con la línea de scan
       ArrayList<Integer> intersections = new ArrayList<>();
 
-      // Encontrar intersecciones con cada borde del polígono
       for (int i = 0; i < xPoints.length; i++) {
-        int j = (i + 1) % xPoints.length; // Índice del siguiente punto en el polígono
+        int j = (i + 1) % xPoints.length;
 
         int x1 = xPoints[i];
         int y1 = yPoints[i];
@@ -292,18 +340,14 @@ public class CubeAutoRot {
         int y2 = yPoints[j];
 
         if ((y1 <= y && y2 > y) || (y1 > y && y2 <= y)) {
-          // Calcular la intersección x de la línea con el borde del polígono
           double xIntersect = (double) (x1 + (double) (y - y1) / (y2 - y1) * (x2 - x1));
 
-          // Convertir a int y agregar a la lista de intersecciones
           intersections.add((int) xIntersect);
         }
       }
 
-      // Ordenar las intersecciones de izquierda a derecha
       Collections.sort(intersections);
 
-      // Dibujar la línea horizontal entre pares de intersecciones
       for (int k = 0; k < intersections.size(); k += 2) {
         int xStart = intersections.get(k);
         int xEnd = intersections.get(k + 1);
@@ -319,13 +363,24 @@ public class CubeAutoRot {
   }
 
   public void clearBuffer() {
-    fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.WHITE);
+    fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.BLACK);
   }
 
   public void rotate() {
-    angleX += 0.2;
-    angleY += 0.1;
-    angleZ += 0.2;
+    angleX += 0.02;
+    angleY += 0.01;
+    angleZ += 0.02;
+  }
+
+  public void move(int dx, int dy, int dz) {
+    cubeX += dx;
+    cubeY += dy;
+    cubeZ += dz;
+  }
+
+  public void scale(double scale) {
+    scaleX *= scale;
+    scaleY *= scale;
   }
 
 }

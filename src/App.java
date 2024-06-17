@@ -10,7 +10,7 @@ public class App extends JFrame {
         this.setTitle("3D");
         this.setResizable(false);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setBackground(Color.WHITE);
+        this.setBackground(Color.BLACK);
 
         pack();
         setLocationRelativeTo(null);

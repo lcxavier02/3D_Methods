@@ -260,6 +260,36 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
         surface.angleZ += Math.toRadians(10);
         break;
     }
+
+    switch (e.getKeyCode()) {
+      case KeyEvent.VK_0:
+        cubeAutoRot.scale(1.1);
+        break;
+      case KeyEvent.VK_1:
+        cubeAutoRot.scale(0.9);
+        break;
+      case KeyEvent.VK_W:
+        cubeAutoRot.move(0, -step, 0);
+        break;
+      case KeyEvent.VK_S:
+        cubeAutoRot.move(0, step, 0);
+        break;
+      case KeyEvent.VK_A:
+        cubeAutoRot.move(-step, 0, 0);
+        break;
+      case KeyEvent.VK_D:
+        cubeAutoRot.move(step, 0, 0);
+        break;
+      case KeyEvent.VK_Q:
+        cubeAutoRot.move(0, 0, step);
+        break;
+      case KeyEvent.VK_E:
+        cubeAutoRot.move(0, 0, -step);
+        break;
+      case KeyEvent.VK_U:
+        cubeAutoRot.toggleEdges();
+        break;
+    }
     repaint();
   }
 
@@ -269,7 +299,6 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
 
   @Override
   public void mouseDragged(MouseEvent e) {
-    repaint();
   }
 
   @Override
