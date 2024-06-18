@@ -185,7 +185,7 @@ public class CubeAutoRot {
 
       // Calculate light intensity
       double intensity = dotProduct(normal, lightDirection);
-      intensity = Math.max(0, intensity); // Clamp intensity to [0, 1]
+      intensity = Math.max(0, intensity);
 
       // Calculate face color based on intensity
       Color baseColor = getBaseColor(index);
@@ -279,8 +279,8 @@ public class CubeAutoRot {
   }
 
   private Color applyLightIntensity(Color color, double intensity) {
-    double minIntensity = 0.2; // Intensidad mínima para que las caras no queden totalmente oscuras
-    intensity = Math.max(intensity, minIntensity); // Asegurarse de que la intensidad no sea menor que el mínimo
+    double minIntensity = 0.2;
+    intensity = Math.max(intensity, minIntensity);
 
     int r = (int) (color.getRed() * intensity);
     int g = (int) (color.getGreen() * intensity);
@@ -416,7 +416,7 @@ public class CubeAutoRot {
   }
 
   public void clearBuffer() {
-    fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.BLACK);
+    fillRect(0, 0, buffer.getWidth(), buffer.getHeight(), Color.WHITE);
   }
 
   public void rotate() {
