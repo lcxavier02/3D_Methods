@@ -16,7 +16,7 @@ public class CubeAutoRot {
   private double scaleX = 1.0;
   private double scaleY = 1.0;
   int size = 50;
-  private Vector3D lightDirection = new Vector3D(0, 1, 0).normalize();
+  private Vector3D lightDirection = new Vector3D(1, -1, 1).normalize();
   private boolean drawEdges = true;
 
   public void toggleEdges() {
@@ -154,30 +154,16 @@ public class CubeAutoRot {
     drawFaces(rotatedVertices, projectedVertex, zBuffer);
   }
 
-  private void drawFaces(double[][] rotatedVertices, int[][] projectedVertices, double[] zBuffer) {
+  public void drawFaces(double[][] rotatedVertices, int[][] projectedVertices, double[] zBuffer) {
     int[][] faces = {
         { 0, 1, 2, 3 }, { 4, 5, 6, 7 }, // Front and Back faces
         { 0, 4, 7, 3 }, { 1, 5, 6, 2 }, // Left and Right faces
         { 0, 1, 5, 4 }, { 2, 3, 7, 6 } // Top and Bottom faces
     };
 
-    Color[] faceColors = {
-        Color.GREEN, Color.BLUE, Color.ORANGE, // Front, Back, Left
-        Color.RED, Color.WHITE, Color.YELLOW // Right, Top, Bottom
-    };
-
     ArrayList<Integer> sortedFaces = new ArrayList<>();
 
     for (int i = 0; i < faces.length; i++) {
-      int[] face = faces[i];
-      double[] zPoints = new double[4];
-      double minZ = Double.MAX_VALUE;
-      for (int j = 0; j < face.length; j++) {
-        zPoints[j] = rotatedVertices[face[j]][2];
-        if (zPoints[j] < minZ) {
-          minZ = zPoints[j];
-        }
-      }
       sortedFaces.add(i);
     }
 
@@ -191,7 +177,20 @@ public class CubeAutoRot {
 
     for (int index : sortedFaces) {
       int[] face = faces[index];
-      Color color = faceColors[index];
+
+      // Calculate face normal
+      double[] v1 = subtract(rotatedVertices[face[1]], rotatedVertices[face[0]]);
+      double[] v2 = subtract(rotatedVertices[face[2]], rotatedVertices[face[0]]);
+      double[] normal = normalize(crossProduct(v1, v2));
+
+      // Calculate light intensity
+      double intensity = dotProduct(normal, lightDirection);
+      intensity = Math.max(0, intensity); // Clamp intensity to [0, 1]
+
+      // Calculate face color based on intensity
+      Color baseColor = getBaseColor(index);
+      Color color = applyLightIntensity(baseColor, intensity);
+
       int[] xPoints = new int[4];
       int[] yPoints = new int[4];
       for (int j = 0; j < face.length; j++) {
@@ -237,6 +236,56 @@ public class CubeAutoRot {
     if (drawEdges) {
       drawEdges(projectedVertices, rotatedVertices, zBuffer);
     }
+  }
+
+  private double[] subtract(double[] v1, double[] v2) {
+    return new double[] { v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2] };
+  }
+
+  private double[] normalize(double[] v) {
+    double length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return new double[] { v[0] / length, v[1] / length, v[2] / length };
+  }
+
+  private double[] crossProduct(double[] v1, double[] v2) {
+    return new double[] {
+        v1[1] * v2[2] - v1[2] * v2[1],
+        v1[2] * v2[0] - v1[0] * v2[2],
+        v1[0] * v2[1] - v1[1] * v2[0]
+    };
+  }
+
+  private double dotProduct(double[] v1, Vector3D v2) {
+    return v1[0] * v2.getX() + v1[1] * v2.getY() + v1[2] * v2.getZ();
+  }
+
+  private Color getBaseColor(int faceIndex) {
+    switch (faceIndex) {
+      case 0:
+        return Color.GREEN;
+      case 1:
+        return Color.BLUE;
+      case 2:
+        return Color.ORANGE;
+      case 3:
+        return Color.RED;
+      case 4:
+        return Color.WHITE;
+      case 5:
+        return Color.YELLOW;
+      default:
+        return Color.GRAY;
+    }
+  }
+
+  private Color applyLightIntensity(Color color, double intensity) {
+    double minIntensity = 0.2; // Intensidad mínima para que las caras no queden totalmente oscuras
+    intensity = Math.max(intensity, minIntensity); // Asegurarse de que la intensidad no sea menor que el mínimo
+
+    int r = (int) (color.getRed() * intensity);
+    int g = (int) (color.getGreen() * intensity);
+    int b = (int) (color.getBlue() * intensity);
+    return new Color(r, g, b);
   }
 
   private void drawEdges(int[][] projectedVertices, double[][] rotatedVertices, double[] zBuffer) {
@@ -371,9 +420,9 @@ public class CubeAutoRot {
   }
 
   public void rotate() {
-    angleX += 0.02;
-    angleY += 0.01;
-    angleZ += 0.02;
+    angleX += 0.1;
+    angleY += 0.05;
+    angleZ += 0.1;
   }
 
   public void move(int dx, int dy, int dz) {
