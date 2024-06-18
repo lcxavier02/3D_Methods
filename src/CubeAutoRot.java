@@ -16,7 +16,7 @@ public class CubeAutoRot {
   private double scaleX = 1.0;
   private double scaleY = 1.0;
   int size = 50;
-  private Vector3D lightDirection = new Vector3D(1, 1, 1).normalize();
+  private Vector3D lightDirection = new Vector3D(0, 1, 0).normalize();
   private boolean drawEdges = true;
 
   public void toggleEdges() {
@@ -118,6 +118,8 @@ public class CubeAutoRot {
   }
 
   public void drawCube() {
+    Vector3D lightDir = new Vector3D(lightDirection.getX(), lightDirection.getY(), lightDirection.getZ());
+
     double[][] vertices = new double[][] {
         { -size, -size, -size }, { size, -size, -size }, { size, size, -size }, { -size, size, -size },
         { -size, -size, size }, { size, -size, size }, { size, size, size }, { -size, size, size }
@@ -138,6 +140,8 @@ public class CubeAutoRot {
       double z = rotatedVertices[i][2] + cubeZ;
       traslatedVertices[i] = new double[] { x, y, z };
     }
+
+    lightDir = lightDir.normalize();
 
     int[][] projectedVertex = new int[8][2];
     for (int i = 0; i < rotatedVertices.length; i++) {
