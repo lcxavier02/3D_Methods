@@ -18,9 +18,14 @@ public class CubeAutoRot {
   int size = 50;
   private Vector3D lightDirection = new Vector3D(1, -1, 1).normalize();
   private boolean drawEdges = true;
+  private boolean fillFaces = true;
 
   public void toggleEdges() {
     drawEdges = !drawEdges;
+  }
+
+  public void toggleFill() {
+    fillFaces = !fillFaces;
   }
 
   public void setLightDirection(Vector3D lightDirection) {
@@ -30,6 +35,7 @@ public class CubeAutoRot {
   public CubeAutoRot(BufferedImage buffer) {
     this.buffer = buffer;
     this.graphicsBuffer = buffer.createGraphics();
+    this.lightDirection = new Vector3D(1, -1, 1).normalize();
   }
 
   public void putPixel(int x, int y, Color c) {
@@ -118,8 +124,6 @@ public class CubeAutoRot {
   }
 
   public void drawCube() {
-    Vector3D lightDir = new Vector3D(lightDirection.getX(), lightDirection.getY(), lightDirection.getZ());
-
     double[][] vertices = new double[][] {
         { -size, -size, -size }, { size, -size, -size }, { size, size, -size }, { -size, size, -size },
         { -size, -size, size }, { size, -size, size }, { size, size, size }, { -size, size, size }
@@ -140,8 +144,6 @@ public class CubeAutoRot {
       double z = rotatedVertices[i][2] + cubeZ;
       traslatedVertices[i] = new double[] { x, y, z };
     }
-
-    lightDir = lightDir.normalize();
 
     int[][] projectedVertex = new int[8][2];
     for (int i = 0; i < rotatedVertices.length; i++) {
@@ -178,16 +180,13 @@ public class CubeAutoRot {
     for (int index : sortedFaces) {
       int[] face = faces[index];
 
-      // Calculate face normal
       double[] v1 = subtract(rotatedVertices[face[1]], rotatedVertices[face[0]]);
       double[] v2 = subtract(rotatedVertices[face[2]], rotatedVertices[face[0]]);
       double[] normal = normalize(crossProduct(v1, v2));
 
-      // Calculate light intensity
       double intensity = dotProduct(normal, lightDirection);
       intensity = Math.max(0, intensity);
 
-      // Calculate face color based on intensity
       Color baseColor = getBaseColor(index);
       Color color = applyLightIntensity(baseColor, intensity);
 
@@ -219,7 +218,9 @@ public class CubeAutoRot {
       }
 
       if (drawFace) {
-        fillPolygon(xPoints, yPoints, color);
+        if (fillFaces) {
+          fillPolygon(xPoints, yPoints, color);
+        }
 
         for (int py = Math.min(yPoints[0], Math.min(yPoints[1], Math.min(yPoints[2], yPoints[3]))); py <= Math
             .max(yPoints[0], Math.max(yPoints[1], Math.max(yPoints[2], yPoints[3]))); py++) {

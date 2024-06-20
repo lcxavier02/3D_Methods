@@ -289,6 +289,9 @@ public class TDPanel extends JPanel implements KeyListener, MouseListener, Mouse
       case KeyEvent.VK_U:
         cubeAutoRot.toggleEdges();
         break;
+      case KeyEvent.VK_I:
+        cubeAutoRot.toggleFill();
+        break;
     }
     repaint();
   }
